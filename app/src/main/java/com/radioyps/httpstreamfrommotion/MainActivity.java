@@ -1,5 +1,6 @@
 package com.radioyps.httpstreamfrommotion;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Handler;
@@ -15,13 +16,22 @@ public class MainActivity extends AppCompatActivity {
 
     private final static String TAG = MainActivity.class.getName();
 
+    private Intent mServiceIntent;
     private  static IncomingHandler mHandler =null ;
-    private TextView mStatusTextView = (TextView)findViewById(R.id.connect_status);
-    private ImageView mImageView = (ImageView)findViewById(R.id.Image);
+    private TextView mStatusTextView ;
+    private ImageView mImageView ;
+    private static byte[] imageBufferMain = new byte[CommonConstants.MAX_IMAGE_SIZE];
+    private static int imageBufferMainSize = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mStatusTextView = (TextView)findViewById(R.id.connect_status);
+        mImageView = (ImageView)findViewById(R.id.Image);
+        mServiceIntent = new Intent(getApplicationContext(),FetchhttpStreamingService.class);
+        mServiceIntent.setAction(CommonConstants.ACTION_START_LOADING);
+        startService(mServiceIntent);
+        mHandler = new IncomingHandler();
     }
 
     /**
@@ -32,18 +42,15 @@ public class MainActivity extends AppCompatActivity {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case CommonConstants.REFLASH_IMAGE:
-                    byte[] imageBytes = (byte[]) msg.obj;
 
-//                    byte[] imageBytes = intent.getByteArrayExtra(ImageViewActivity.EXTRA_IMAGE_BYTE_ARRAY);
-
-                    Bitmap bm = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+                    Bitmap imageBitmap = BitmapFactory.decodeByteArray(imageBufferMain, 0, imageBufferMainSize);
                     DisplayMetrics dm = new DisplayMetrics();
                     getWindowManager().getDefaultDisplay().getMetrics(dm);
 
                     mImageView.setMinimumHeight(dm.heightPixels);
                     mImageView.setMinimumWidth(dm.widthPixels);
-                    mImageView.setImageBitmap(bm);
-                    Log.i(TAG, "IncomingHandler()>> image length: " + imageBytes.length);
+                    mImageView.setImageBitmap(imageBitmap);
+                    Log.i(TAG, "IncomingHandler()>> refresh new image ");
 
                     break;
                 case CommonConstants.UPDATE_CONNECTION_STATUS:
@@ -60,6 +67,13 @@ public class MainActivity extends AppCompatActivity {
         Message.obtain(mHandler, CommonConstants.UPDATE_CONNECTION_STATUS,mesg ).sendToTarget();
     }
 
+    public static void sendImageBytes(String mesg){
+        Message.obtain(mHandler, CommonConstants.REFLASH_IMAGE, mesg ).sendToTarget();
+    }
 
+    public static void copyImages(byte[]imageBuffer){
+        System.arraycopy(imageBuffer,0, imageBufferMain,0, imageBuffer.length );
+        imageBufferMainSize = imageBuffer.length;
+    }
 
 }

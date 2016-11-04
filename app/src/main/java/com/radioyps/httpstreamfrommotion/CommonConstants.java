@@ -11,12 +11,13 @@ public class CommonConstants {
     public static final int REFLASH_IMAGE = 0x12;
     public static final int UPDATE_CONNECTION_STATUS = 0x13;
 
-    public static final int ACTION_START_LOADING = 0x14;
-    public static final int ACTION_STOP_LOADING = 0x15;
+    public static final String ACTION_START_LOADING = "com.radioyps.httpstreamfrommotion.ACTION_START_LOADING";
+    public static final String ACTION_STOP_LOADING = "com.radioyps.httpstreamfrommotion.ACTION_STOP_LOADING";
 
 
     public static final String serverUrlStr = "http://192.168.12.109:2022";
     public static final String bundaryString = "--BoundaryString";
-    public static final String contentLength = "Content-Length";
+    public static final String contentLength = "Content-Length:";
     public static final String HttpHeadEndByte = "\r\n\r\n";
+    public static final int MAX_IMAGE_SIZE = 100*1024;
 }
