@@ -42,8 +42,8 @@ public class MainActivity extends AppCompatActivity {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case CommonConstants.REFLASH_IMAGE:
-
-                    Bitmap imageBitmap = BitmapFactory.decodeByteArray(imageBufferMain, 0, imageBufferMainSize);
+                    byte[] imageData = (byte[])msg.obj;
+                    Bitmap imageBitmap = BitmapFactory.decodeByteArray(imageData, 0, imageData.length);
                     DisplayMetrics dm = new DisplayMetrics();
                     getWindowManager().getDefaultDisplay().getMetrics(dm);
 
@@ -67,10 +67,13 @@ public class MainActivity extends AppCompatActivity {
         Message.obtain(mHandler, CommonConstants.UPDATE_CONNECTION_STATUS,mesg ).sendToTarget();
     }
 
-    public static void sendImageBytes(String mesg){
-        Message.obtain(mHandler, CommonConstants.REFLASH_IMAGE, mesg ).sendToTarget();
-    }
+//    public static void sendImageBytes(String mesg){
+//        Message.obtain(mHandler, CommonConstants.REFLASH_IMAGE, mesg ).sendToTarget();
+//    }
 
+    public static void sendImageBytes(byte[] imageData){
+        Message.obtain(mHandler, CommonConstants.REFLASH_IMAGE, imageData ).sendToTarget();
+    }
     public static void copyImages(byte[]imageBuffer){
         System.arraycopy(imageBuffer,0, imageBufferMain,0, imageBuffer.length );
         imageBufferMainSize = imageBuffer.length;

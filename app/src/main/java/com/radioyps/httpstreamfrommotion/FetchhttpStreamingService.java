@@ -103,58 +103,80 @@ public class FetchhttpStreamingService extends IntentService{
         }
         @Override
         public void run() {
+            while (!isNeedStopReadingThread) {
+                try {
 
-            try {
+                    Uri builtUri = Uri.parse(CommonConstants.serverUrlStr).buildUpon().build();
 
-                Uri builtUri = Uri.parse(CommonConstants.serverUrlStr).buildUpon().build();
-
-                URL url = new URL(builtUri.toString());
-
-
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.connect();
-
-                BufferedInputStream is =
-                        (new BufferedInputStream(urlConnection.getInputStream()));
-                byte[] buffer = new byte[50*1024];
-                byte[] imageBuffer = null;
-                int currentImageSize = 0;
-                int currentImageBufferOffet = 0;
-                while (((bytesRead = is.read(buffer,0,buffer.length))>0)
-                        &&(!isNeedStopReadingThread)){
-                    Log.i(LOG_TAG, "Read inputstream:: length: " + bytesRead);
-                     int[] info = checkBoundary(buffer);
-                     if(info[0] != 0 ){
-                         currentImageSize = info[0] + 2;
-                         int offset = info[1];
-                         imageBuffer = new byte[currentImageSize];
-                         System.arraycopy(buffer,offset, imageBuffer,0, bytesRead - offset);
-                         Log.i(LOG_TAG, "Image data got, length: " + (bytesRead-offset));
-                         currentImageBufferOffet = bytesRead-offset;
-
-                     }else if(currentImageSize != 0){
-                         Log.i(LOG_TAG, "Image data got, length: " + bytesRead);
-                         System.arraycopy(buffer, 0, imageBuffer, currentImageBufferOffet,bytesRead);
-                         currentImageBufferOffet += bytesRead;
-                         if(currentImageBufferOffet == currentImageSize){
-                             Log.i(LOG_TAG, "we have a new image ready. length: " + imageBuffer.length);
-                             MainActivity.copyImages(imageBuffer);
-
-                             MainActivity.sendImageBytes("image ready");
-
-                             currentImageSize = 0;
-                         }
-                     }
+                    URL url = new URL(builtUri.toString());
 
 
+                    urlConnection = (HttpURLConnection) url.openConnection();
+                    urlConnection.setRequestMethod("GET");
+                    urlConnection.connect();
+                    urlConnection.setConnectTimeout(2000);
+                    urlConnection.setReadTimeout(2000);
+
+                    BufferedInputStream is =
+                            (new BufferedInputStream(urlConnection.getInputStream()));
+                    byte[] buffer = new byte[50 * 1024];
+                    byte[] imageBuffer = null;
+                    int currentImageSize = 0;
+                    int currentImageBufferOffet = 0;
+                    while (((bytesRead = is.read(buffer, 0, buffer.length)) > 0)
+                            && (!isNeedStopReadingThread)) {
+                        Log.i(LOG_TAG, "Read inputstream:: length: " + bytesRead);
+
+                        try {
+                            int[] info = checkBoundary(buffer);
+                            if (info[0] != 0) {
+                                currentImageSize = info[0] + 2;
+                                int offset = info[1];
+                                imageBuffer = new byte[currentImageSize];
+                                int firstPacketImagedataLength = bytesRead - offset;
+                         /* find a strang error, this value is <0 */
+                                if (firstPacketImagedataLength > 0) {
+                                    Log.i(LOG_TAG, "First image data start from: " + firstPacketImagedataLength);
+                                    System.arraycopy(buffer, offset, imageBuffer, 0, firstPacketImagedataLength);
+                                    currentImageBufferOffet = firstPacketImagedataLength;
+                                    MainActivity.sendStringMesg("new image arriving..");
+                                }
+
+                            } else if (currentImageSize != 0) {
+                                Log.i(LOG_TAG, "This time read Image data length: " + bytesRead);
+                                MainActivity.sendStringMesg("Reciving data..");
+                                System.arraycopy(buffer, 0, imageBuffer, currentImageBufferOffet, bytesRead);
+                                currentImageBufferOffet += bytesRead;
+                                if (currentImageBufferOffet == currentImageSize) {
+                                    Log.i(LOG_TAG, "A new image ready. total length: " + imageBuffer.length);
+//                                MainActivity.copyImages(imageBuffer);
+                                    MainActivity.sendStringMesg("refrash image..");
+                                    MainActivity.sendImageBytes(imageBuffer);
+                                    currentImageSize = 0;
+                                }
+                            }
+                        } catch (Exception e) {
+                            Log.i(LOG_TAG, "One error happend when receiving data, ignore it");
+                            currentImageSize = 0;
+                        }
+
+
+                    }
+
+                    is.close();
+                    Log.i(LOG_TAG, "FetchData()>> close connection is done");
+                } catch (Exception e) {
+                    Log.e(LOG_TAG, "Error creating ServerSocket: ", e);
+                    MainActivity.sendStringMesg("Error on connect to the camera..");
+                    e.printStackTrace();
                 }
-
-                is.close();
-                Log.i(LOG_TAG, "FetchData()>> close connection is done");
-            } catch (IOException e) {
-                Log.e(LOG_TAG, "Error creating ServerSocket: ", e);
-                e.printStackTrace();
+                try{
+                    Thread.sleep(2000);
+                    MainActivity.sendStringMesg("Retrying connect to the camera..");
+                    Thread.sleep(3000);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
             }
         }
     }
