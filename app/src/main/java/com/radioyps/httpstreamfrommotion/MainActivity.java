@@ -42,14 +42,14 @@ public class MainActivity extends AppCompatActivity {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case CommonConstants.REFLASH_IMAGE:
-                    byte[] imageData = (byte[])msg.obj;
-                    Bitmap imageBitmap = BitmapFactory.decodeByteArray(imageData, 0, imageData.length);
+                    Bitmap imageData = (Bitmap)msg.obj;
+                    //Bitmap imageBitmap = BitmapFactory.decodeByteArray(imageData, 0, imageData.length);
                     DisplayMetrics dm = new DisplayMetrics();
                     getWindowManager().getDefaultDisplay().getMetrics(dm);
 
                     mImageView.setMinimumHeight(dm.heightPixels);
                     mImageView.setMinimumWidth(dm.widthPixels);
-                    mImageView.setImageBitmap(imageBitmap);
+                    mImageView.setImageBitmap(imageData);
                     Log.i(TAG, "IncomingHandler()>> refresh new image ");
 
                     break;
@@ -71,12 +71,12 @@ public class MainActivity extends AppCompatActivity {
 //        Message.obtain(mHandler, CommonConstants.REFLASH_IMAGE, mesg ).sendToTarget();
 //    }
 
-    public static void sendImageBytes(byte[] imageData){
+    public static void sendImageBytes(Bitmap imageData){
         Message.obtain(mHandler, CommonConstants.REFLASH_IMAGE, imageData ).sendToTarget();
     }
-    public static void copyImages(byte[]imageBuffer){
+   /* public static void copyImages(Bitmap imageBuffer){
         System.arraycopy(imageBuffer,0, imageBufferMain,0, imageBuffer.length );
         imageBufferMainSize = imageBuffer.length;
-    }
+    }*/
 
 }

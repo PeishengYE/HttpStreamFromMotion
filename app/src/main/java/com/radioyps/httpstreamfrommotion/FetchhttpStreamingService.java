@@ -102,79 +102,88 @@ public class FetchhttpStreamingService extends IntentService{
             Log.i(LOG_TAG, "image length: " + imageSize);
             return  imageSize;
         }
+
+        private void getMotionImage(){
+            try {
+
+                Uri builtUri = Uri.parse(CommonConstants.serverUrlStr).buildUpon().build();
+
+                URL url = new URL(builtUri.toString());
+
+
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("GET");
+
+                urlConnection.setConnectTimeout(10000);
+                urlConnection.setReadTimeout(10000);
+                String userpass = "peter" + ":" + "123";
+                //String basicAuth = "Basic " + new String(new Base64().encode(userpass.getBytes()));
+                String basicAuth = "Basic " + new String(android.util.Base64.encode(userpass.getBytes(), android.util.Base64.NO_WRAP));
+                urlConnection.setRequestProperty ("Authorization", basicAuth);
+                urlConnection.connect();
+                BufferedInputStream is =
+                        (new BufferedInputStream(urlConnection.getInputStream()));
+                byte[] buffer = new byte[50 * 1024];
+                byte[] imageBuffer = null;
+                int currentImageSize = 0;
+                int currentImageBufferOffet = 0;
+                while (((bytesRead = is.read(buffer, 0, buffer.length)) > 0)
+                        && (!isNeedStopReadingThread)) {
+                    Log.i(LOG_TAG, "Read inputstream:: length: " + bytesRead);
+
+                    try {
+                        int[] info = checkBoundary(buffer);
+                        if (info[0] != 0) {
+                            currentImageSize = info[0] + 2;
+                            int offset = info[1];
+                            imageBuffer = new byte[currentImageSize];
+                            int firstPacketImagedataLength = bytesRead - offset;
+                         /* find a strang error, this value is <0 */
+                            if (firstPacketImagedataLength > 0) {
+                                Log.i(LOG_TAG, "First image data start from: " + firstPacketImagedataLength);
+                                System.arraycopy(buffer, offset, imageBuffer, 0, firstPacketImagedataLength);
+                                currentImageBufferOffet = firstPacketImagedataLength;
+                                MainActivity.sendStringMesg("new image arriving..");
+                            }
+
+                        } else if (currentImageSize != 0) {
+                            Log.i(LOG_TAG, "This time read Image data length: " + bytesRead);
+                            MainActivity.sendStringMesg("Reciving data..");
+                            System.arraycopy(buffer, 0, imageBuffer, currentImageBufferOffet, bytesRead);
+                            currentImageBufferOffet += bytesRead;
+                            if (currentImageBufferOffet == currentImageSize) {
+                                Log.i(LOG_TAG, "A new image ready. total length: " + imageBuffer.length);
+                                Bitmap imageBitmap = BitmapFactory.decodeByteArray(imageBuffer, 0, imageBuffer.length);
+//                                MainActivity.copyImages(imageBuffer);
+                                MainActivity.sendStringMesg("refrash image..");
+                                MainActivity.sendImageBytes(imageBitmap);
+                                currentImageSize = 0;
+                            }
+                        }
+                    } catch (Exception e) {
+                        Log.i(LOG_TAG, "One error happend when receiving data, ignore it");
+                        currentImageSize = 0;
+                    }
+
+
+                }
+
+                is.close();
+                Log.i(LOG_TAG, "FetchData()>> close connection is done");
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "Error creating ServerSocket: ", e);
+                MainActivity.sendStringMesg("Error on connect to the camera..");
+                e.printStackTrace();
+            }
+        }
+        private void getKidsScreenshot(){
+
+        }
         @Override
         public void run() {
             while (!isNeedStopReadingThread) {
-                try {
+                getMotionImage();
 
-                    Uri builtUri = Uri.parse(CommonConstants.serverUrlStr).buildUpon().build();
-
-                    URL url = new URL(builtUri.toString());
-
-
-                    urlConnection = (HttpURLConnection) url.openConnection();
-                    urlConnection.setRequestMethod("GET");
-
-                    urlConnection.setConnectTimeout(10000);
-                    urlConnection.setReadTimeout(10000);
-                    String userpass = "peter" + ":" + "123";
-                    //String basicAuth = "Basic " + new String(new Base64().encode(userpass.getBytes()));
-                    String basicAuth = "Basic " + new String(android.util.Base64.encode(userpass.getBytes(), android.util.Base64.NO_WRAP));
-                    urlConnection.setRequestProperty ("Authorization", basicAuth);
-                    urlConnection.connect();
-                    BufferedInputStream is =
-                            (new BufferedInputStream(urlConnection.getInputStream()));
-                    byte[] buffer = new byte[50 * 1024];
-                    byte[] imageBuffer = null;
-                    int currentImageSize = 0;
-                    int currentImageBufferOffet = 0;
-                    while (((bytesRead = is.read(buffer, 0, buffer.length)) > 0)
-                            && (!isNeedStopReadingThread)) {
-                        Log.i(LOG_TAG, "Read inputstream:: length: " + bytesRead);
-
-                        try {
-                            int[] info = checkBoundary(buffer);
-                            if (info[0] != 0) {
-                                currentImageSize = info[0] + 2;
-                                int offset = info[1];
-                                imageBuffer = new byte[currentImageSize];
-                                int firstPacketImagedataLength = bytesRead - offset;
-                         /* find a strang error, this value is <0 */
-                                if (firstPacketImagedataLength > 0) {
-                                    Log.i(LOG_TAG, "First image data start from: " + firstPacketImagedataLength);
-                                    System.arraycopy(buffer, offset, imageBuffer, 0, firstPacketImagedataLength);
-                                    currentImageBufferOffet = firstPacketImagedataLength;
-                                    MainActivity.sendStringMesg("new image arriving..");
-                                }
-
-                            } else if (currentImageSize != 0) {
-                                Log.i(LOG_TAG, "This time read Image data length: " + bytesRead);
-                                MainActivity.sendStringMesg("Reciving data..");
-                                System.arraycopy(buffer, 0, imageBuffer, currentImageBufferOffet, bytesRead);
-                                currentImageBufferOffet += bytesRead;
-                                if (currentImageBufferOffet == currentImageSize) {
-                                    Log.i(LOG_TAG, "A new image ready. total length: " + imageBuffer.length);
-//                                MainActivity.copyImages(imageBuffer);
-                                    MainActivity.sendStringMesg("refrash image..");
-                                    MainActivity.sendImageBytes(imageBuffer);
-                                    currentImageSize = 0;
-                                }
-                            }
-                        } catch (Exception e) {
-                            Log.i(LOG_TAG, "One error happend when receiving data, ignore it");
-                            currentImageSize = 0;
-                        }
-
-
-                    }
-
-                    is.close();
-                    Log.i(LOG_TAG, "FetchData()>> close connection is done");
-                } catch (Exception e) {
-                    Log.e(LOG_TAG, "Error creating ServerSocket: ", e);
-                    MainActivity.sendStringMesg("Error on connect to the camera..");
-                    e.printStackTrace();
-                }
                 try{
                     Thread.sleep(2000);
                     MainActivity.sendStringMesg("Retrying connect to the camera..");
