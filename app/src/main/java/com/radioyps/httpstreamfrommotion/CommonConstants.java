@@ -16,7 +16,9 @@ public class CommonConstants {
 
 
 //    public static final String serverUrlStr = "http://192.168.12.109:2022";
-    public static final String serverUrlStr = "http://192.168.12.219:2022";
+    public static final String serverUrlStr = "http://192.168.106.219:2022/";
+    //public static final String serverUrlStr = "http://192.168.106.221:8080/image/";
+    //public static final String serverUrlStr = "http://192.168.106.123:8080/image";
     public static final String bundaryString = "--BoundaryString";
     public static final String contentLength = "Content-Length:";
     public static final String HttpHeadEndByte = "\r\n\r\n";

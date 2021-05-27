@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.util.Base64;
 import android.util.Log;
 
 import java.io.BufferedInputStream;
@@ -113,10 +114,14 @@ public class FetchhttpStreamingService extends IntentService{
 
                     urlConnection = (HttpURLConnection) url.openConnection();
                     urlConnection.setRequestMethod("GET");
-                    urlConnection.connect();
-                    urlConnection.setConnectTimeout(2000);
-                    urlConnection.setReadTimeout(2000);
 
+                    urlConnection.setConnectTimeout(10000);
+                    urlConnection.setReadTimeout(10000);
+                    String userpass = "peter" + ":" + "123";
+                    //String basicAuth = "Basic " + new String(new Base64().encode(userpass.getBytes()));
+                    String basicAuth = "Basic " + new String(android.util.Base64.encode(userpass.getBytes(), android.util.Base64.NO_WRAP));
+                    urlConnection.setRequestProperty ("Authorization", basicAuth);
+                    urlConnection.connect();
                     BufferedInputStream is =
                             (new BufferedInputStream(urlConnection.getInputStream()));
                     byte[] buffer = new byte[50 * 1024];
