@@ -106,7 +106,7 @@ public class FetchhttpStreamingService extends IntentService{
         private void getMotionImage(){
             try {
 
-                Uri builtUri = Uri.parse(CommonConstants.serverUrlStr).buildUpon().build();
+                Uri builtUri = Uri.parse(CommonConstants.MotionCameraUrlStr).buildUpon().build();
 
                 URL url = new URL(builtUri.toString());
 
@@ -127,6 +127,7 @@ public class FetchhttpStreamingService extends IntentService{
                 byte[] imageBuffer = null;
                 int currentImageSize = 0;
                 int currentImageBufferOffet = 0;
+                int count = 0;
                 while (((bytesRead = is.read(buffer, 0, buffer.length)) > 0)
                         && (!isNeedStopReadingThread)) {
                     Log.i(LOG_TAG, "Read inputstream:: length: " + bytesRead);
@@ -158,8 +159,14 @@ public class FetchhttpStreamingService extends IntentService{
                                 MainActivity.sendStringMesg("refrash image..");
                                 MainActivity.sendImageBytes(imageBitmap);
                                 currentImageSize = 0;
+                                count ++;
+                                if(count >= 2) {
+                                    Log.i(LOG_TAG, "Motion image showing is end !");
+                                    break;
+                                }
                             }
                         }
+
                     } catch (Exception e) {
                         Log.i(LOG_TAG, "One error happend when receiving data, ignore it");
                         currentImageSize = 0;
@@ -176,21 +183,74 @@ public class FetchhttpStreamingService extends IntentService{
                 e.printStackTrace();
             }
         }
-        private void getKidsScreenshot(){
+        private void
 
+
+        private void getKidsScreenshot(String urlKids){
+            try {
+
+                Uri builtUri = Uri.parse(urlKids).buildUpon().build();
+
+                URL url = new URL(builtUri.toString());
+
+
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("GET");
+
+                urlConnection.setConnectTimeout(5000);
+                urlConnection.setReadTimeout(5000);
+                String userpass = "peter" + ":" + "123";
+                //String basicAuth = "Basic " + new String(new Base64().encode(userpass.getBytes()));
+                String basicAuth = "Basic " + new String(android.util.Base64.encode(userpass.getBytes(), android.util.Base64.NO_WRAP));
+                urlConnection.setRequestProperty ("Authorization", basicAuth);
+                urlConnection.connect();
+                Bitmap bitmap =
+                        BitmapFactory.decodeStream((urlConnection.getInputStream()));
+                Log.i(LOG_TAG, "getKidsScreenshot()>> bitmap from Zihan is done!");
+                if(urlKids == CommonConstants.ZihanUrlStr) {
+                    MainActivity.sendStringMesg("Zihan screenshot..");
+                }else if(urlKids == CommonConstants.ZiyiUrlStr){
+                    MainActivity.sendStringMesg("Ziyi screenshot..");
+                }else{
+                    MainActivity.sendStringMesg("Error wrong URL..");
+                }
+                MainActivity.sendImageBytes(bitmap);
+
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "Error on connecting Zihan Computer", e);
+                MainActivity.sendStringMesg("Error on connect to Zihan Computer..");
+                e.printStackTrace();
+            }
         }
         @Override
         public void run() {
             while (!isNeedStopReadingThread) {
-                getMotionImage();
-
                 try{
-                    Thread.sleep(2000);
-                    MainActivity.sendStringMesg("Retrying connect to the camera..");
-                    Thread.sleep(3000);
+                    Thread.sleep(4000);
+
                 }catch (Exception e){
                     e.printStackTrace();
                 }
+                MainActivity.sendStringMesg("Retrying Door camera..");
+                getMotionImage();
+
+                try{
+                    Thread.sleep(1000);
+
+
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+                MainActivity.sendStringMesg("Retrying Zihan Screenshot..");
+                getKidsScreenshot(CommonConstants.ZihanUrlStr);
+                try{
+                    Thread.sleep(4000);
+                   }catch (Exception e){
+                    e.printStackTrace();
+                }
+                MainActivity.sendStringMesg("Retrying Ziyi Screenshot..");
+                getKidsScreenshot(CommonConstants.ZiyiUrlStr);
+
             }
         }
     }

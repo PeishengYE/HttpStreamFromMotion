@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PowerManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -20,8 +21,9 @@ public class MainActivity extends AppCompatActivity {
     private  static IncomingHandler mHandler =null ;
     private TextView mStatusTextView ;
     private ImageView mImageView ;
-    private static byte[] imageBufferMain = new byte[CommonConstants.MAX_IMAGE_SIZE];
-    private static int imageBufferMainSize = 0;
+//    private static byte[] imageBufferMain = new byte[CommonConstants.MAX_IMAGE_SIZE];
+//    private static int imageBufferMainSize = 0;
+    private PowerManager.WakeLock wl;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,6 +34,13 @@ public class MainActivity extends AppCompatActivity {
         mServiceIntent.setAction(CommonConstants.ACTION_START_LOADING);
         startService(mServiceIntent);
         mHandler = new IncomingHandler();
+
+        /**/
+
+
+        PowerManager pm = (PowerManager)getSystemService(this.POWER_SERVICE);
+        wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "whatever");
+        wl.acquire();
     }
 
     /**
