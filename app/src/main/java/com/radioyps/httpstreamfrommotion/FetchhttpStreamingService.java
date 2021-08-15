@@ -114,8 +114,8 @@ public class FetchhttpStreamingService extends IntentService{
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
 
-                urlConnection.setConnectTimeout(10000);
-                urlConnection.setReadTimeout(10000);
+                urlConnection.setConnectTimeout(20000);
+                urlConnection.setReadTimeout(20000);
                 String userpass = "peter" + ":" + "123";
                 //String basicAuth = "Basic " + new String(new Base64().encode(userpass.getBytes()));
                 String basicAuth = "Basic " + new String(android.util.Base64.encode(userpass.getBytes(), android.util.Base64.NO_WRAP));
@@ -183,7 +183,7 @@ public class FetchhttpStreamingService extends IntentService{
                 e.printStackTrace();
             }
         }
-        private void
+
 
 
         private void getKidsScreenshot(String urlKids){
@@ -197,8 +197,8 @@ public class FetchhttpStreamingService extends IntentService{
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
 
-                urlConnection.setConnectTimeout(5000);
-                urlConnection.setReadTimeout(5000);
+                urlConnection.setConnectTimeout(20000);
+                urlConnection.setReadTimeout(20000);
                 String userpass = "peter" + ":" + "123";
                 //String basicAuth = "Basic " + new String(new Base64().encode(userpass.getBytes()));
                 String basicAuth = "Basic " + new String(android.util.Base64.encode(userpass.getBytes(), android.util.Base64.NO_WRAP));
@@ -225,17 +225,17 @@ public class FetchhttpStreamingService extends IntentService{
         @Override
         public void run() {
             while (!isNeedStopReadingThread) {
+//                try{
+//                    Thread.sleep(4000);
+//
+//                }catch (Exception e){
+//                    e.printStackTrace();
+//                }
+//                MainActivity.sendStringMesg("Retrying Door camera..");
+//                getMotionImage();
+
                 try{
                     Thread.sleep(4000);
-
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-                MainActivity.sendStringMesg("Retrying Door camera..");
-                getMotionImage();
-
-                try{
-                    Thread.sleep(1000);
 
 
                 }catch (Exception e){
@@ -248,6 +248,7 @@ public class FetchhttpStreamingService extends IntentService{
                    }catch (Exception e){
                     e.printStackTrace();
                 }
+
                 MainActivity.sendStringMesg("Retrying Ziyi Screenshot..");
                 getKidsScreenshot(CommonConstants.ZiyiUrlStr);
 

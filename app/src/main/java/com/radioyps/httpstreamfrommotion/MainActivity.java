@@ -1,6 +1,7 @@
 package com.radioyps.httpstreamfrommotion;
 
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Handler;
@@ -37,10 +38,15 @@ public class MainActivity extends AppCompatActivity {
 
         /**/
 
+        registerReceiver(new PhoneUnlockedReceiver(), new IntentFilter("android.intent.action.USER_PRESENT"));
 
-        PowerManager pm = (PowerManager)getSystemService(this.POWER_SERVICE);
-        wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "whatever");
-        wl.acquire();
+        Log.i(TAG, "onCreate()>>  PhoneUnlockedReceiver added");
+        PhoneUnlockedReceiver receiver = new PhoneUnlockedReceiver();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_USER_PRESENT);
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
+        registerReceiver(receiver, filter);
+
     }
 
     /**
