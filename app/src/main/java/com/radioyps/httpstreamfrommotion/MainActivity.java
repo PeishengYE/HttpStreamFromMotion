@@ -47,6 +47,11 @@ public class MainActivity extends AppCompatActivity {
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         registerReceiver(receiver, filter);
 
+
+        PowerManager pm = (PowerManager)getSystemService(this.POWER_SERVICE);
+        wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, TAG + "keep screen on");
+        wl.acquire();
+
     }
 
     /**
@@ -93,5 +98,7 @@ public class MainActivity extends AppCompatActivity {
         System.arraycopy(imageBuffer,0, imageBufferMain,0, imageBuffer.length );
         imageBufferMainSize = imageBuffer.length;
     }*/
+
+
 
 }
